@@ -68,6 +68,7 @@ func (c *Client) request(method string, relativePath string, requestBody interfa
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	if responseBody != nil {
 		if err = unmarshalResponse(resp, &responseBody); err != nil {
