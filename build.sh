@@ -11,7 +11,7 @@ export GOX_ARCH="amd64"
 export GOX_OS=${*:-"linux darwin"}
 
 # We'll use gox to cross-compile
-go get github.com/mitchellh/gox
+GO111MODULE=off go get github.com/mitchellh/gox
 # We just assume the cross toolchains are already installed, since on Debian
 # there are deb packages for those.
 
