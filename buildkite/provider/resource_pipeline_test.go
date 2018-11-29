@@ -1,4 +1,4 @@
-package buildkite
+package provider
 
 import (
 	"fmt"
@@ -6,6 +6,8 @@ import (
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+
+	buildkiteClient "github.com/saymedia/terraform-buildkite/buildkite/client"
 )
 
 func TestAccPipeline_basic_unknown(t *testing.T) {
@@ -80,8 +82,7 @@ func TestAccPipeline_basic_gitlab(t *testing.T) {
 
 func testAccCheckBuildkitePipelineExists(id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*Client)
-		res := new(Pipeline)
+		client := testAccProvider.Meta().(*buildkiteClient.Client)
 
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {
@@ -92,7 +93,7 @@ func testAccCheckBuildkitePipelineExists(id string) resource.TestCheckFunc {
 			return fmt.Errorf("No Pipeline ID is set")
 		}
 
-		err := client.Get([]string{"pipelines", rs.Primary.ID}, res)
+		res, err := client.GetPipeline(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -107,16 +108,14 @@ func testAccCheckBuildkitePipelineExists(id string) resource.TestCheckFunc {
 }
 
 func testAccCheckBuildkitePipelineDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*Client)
+	client := testAccProvider.Meta().(*buildkiteClient.Client)
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "buildkite_pipeline" {
 			continue
 		}
 
-		res := new(Pipeline)
-
-		err := client.Get([]string{"pipelines", rs.Primary.ID}, res)
+		res, err := client.GetPipeline(rs.Primary.ID)
 		if err == nil {
 			if res.Slug == rs.Primary.ID {
 				return fmt.Errorf("Pipeline still exists")
@@ -124,7 +123,7 @@ func testAccCheckBuildkitePipelineDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error
-		if _, ok := err.(*notFound); !ok {
+		if _, ok := err.(*buildkiteClient.NotFound); !ok {
 			return err
 		}
 	}

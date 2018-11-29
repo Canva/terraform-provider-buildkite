@@ -1,9 +1,11 @@
-package buildkite
+package provider
 
 import (
 	"log"
 
 	"github.com/hashicorp/terraform/helper/schema"
+
+	"github.com/saymedia/terraform-buildkite/buildkite/client"
 )
 
 func resourcePipeline() *schema.Resource {
@@ -139,113 +141,64 @@ func resourcePipeline() *schema.Resource {
 	}
 }
 
-type Pipeline struct {
-	Id                  string            `json:"id,omitempty"`
-	Environment         map[string]string `json:"env,omitempty"`
-	Slug                string            `json:"slug,omitempty"`
-	WebURL              string            `json:"web_url,omitempty"`
-	BuildsURL           string            `json:"builds_url,omitempty"`
-	Url                 string            `json:"url,omitempty"`
-	DefaultBranch       string            `json:"default_branch,omitempty"`
-	BadgeURL            string            `json:"badge_url,omitempty"`
-	CreatedAt           string            `json:"created_at,omitempty"`
-	Repository          string            `json:"repository,omitempty"`
-	Name                string            `json:"name,omitempty"`
-	Description         string            `json:"description,omitempty"`
-	BranchConfiguration string            `json:"branch_configuration,omitempty"`
-	Provider            BuildkiteProvider `json:"provider,omitempty"`
-	ProviderSettings    map[string]string `json:"provider_settings,omitempty"`
-	Steps               []Step            `json:"steps"`
-}
-
-type BuildkiteProvider struct {
-	Settings   map[string]interface{} `json:"settings"`
-	WebhookURL string                 `json:"webhook_url"`
-}
-
-type Step struct {
-	Type                string            `json:"type"`
-	Name                string            `json:"name,omitempty"`
-	Command             string            `json:"command,omitempty"`
-	Environment         map[string]string `json:"env,omitempty"`
-	TimeoutInMinutes    int               `json:"timeout_in_minutes,omitempty"`
-	AgentQueryRules     []string          `json:"agent_query_rules,omitempty"`
-	BranchConfiguration string            `json:"branch_configuration,omitempty"`
-	ArtifactPaths       string            `json:"artifact_paths,omitempty"`
-	Concurrency         int               `json:"concurrency,omitempty"`
-	Parallelism         int               `json:"parallelism,omitempty"`
-}
-
 func CreatePipeline(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[TRACE] CreatePipeline")
 
-	client := meta.(*Client)
+	buildkiteClient := meta.(*client.Client)
 
-	req := preparePipelineRequestPayload(d)
-	res := &Pipeline{}
+	pipeline := preparePipelineRequestPayload(d)
 
-	err := client.Post([]string{"pipelines"}, req, res)
+	res, err := buildkiteClient.CreatePipeline(pipeline)
 	if err != nil {
 		return err
 	}
 
-	updatePipelineFromAPI(d, res)
-
-	return nil
+	return updatePipelineFromAPI(d, res)
 }
 
 func ReadPipeline(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[TRACE] ReadPipeline")
 
-	client := meta.(*Client)
+	buildkiteClient := meta.(*client.Client)
 	slug := d.Id()
 
-	res := &Pipeline{}
-
-	err := client.Get([]string{"pipelines", slug}, res)
+	pipeline, err := buildkiteClient.GetPipeline(slug)
 	if err != nil {
-		if _, ok := err.(*notFound); ok {
+		if _, ok := err.(*client.NotFound); ok {
 			d.SetId("")
 			return nil
 		}
 		return err
 	}
 
-	updatePipelineFromAPI(d, res)
-
-	return nil
+	return updatePipelineFromAPI(d, pipeline)
 }
 
 func UpdatePipeline(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[TRACE] UpdatePipeline")
 
-	client := meta.(*Client)
-	slug := d.Id()
+	buildkiteClient := meta.(*client.Client)
 
-	req := preparePipelineRequestPayload(d)
-	res := &Pipeline{}
+	pipeline := preparePipelineRequestPayload(d)
 
-	err := client.Patch([]string{"pipelines", slug}, req, res)
+	res, err := buildkiteClient.UpdatePipeline(pipeline)
 	if err != nil {
 		return err
 	}
 
-	updatePipelineFromAPI(d, res)
-
-	return nil
+	return updatePipelineFromAPI(d, res)
 }
 
 func DeletePipeline(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[TRACE] DeletePipeline")
 
-	client := meta.(*Client)
-
+	buildkiteClient := meta.(*client.Client)
 	slug := d.Id()
 
-	return client.Delete([]string{"pipelines", slug})
+	return buildkiteClient.DeletePipeline(slug)
 }
 
-func updatePipelineFromAPI(d *schema.ResourceData, p *Pipeline) {
+func updatePipelineFromAPI(d *schema.ResourceData, p *client.Pipeline) error {
 	d.SetId(p.Slug)
 	log.Printf("[INFO] Pipeline ID: %s", d.Id())
 
@@ -277,10 +230,11 @@ func updatePipelineFromAPI(d *schema.ResourceData, p *Pipeline) {
 		}
 	}
 	d.Set("step", stepMap)
+	return nil
 }
 
-func preparePipelineRequestPayload(d *schema.ResourceData) *Pipeline {
-	req := &Pipeline{}
+func preparePipelineRequestPayload(d *schema.ResourceData) *client.Pipeline {
+	req := &client.Pipeline{}
 
 	req.Name = d.Get("name").(string)
 	req.DefaultBranch = d.Get("default_branch").(string)
@@ -298,11 +252,11 @@ func preparePipelineRequestPayload(d *schema.ResourceData) *Pipeline {
 	}
 
 	stepsI := d.Get("step").([]interface{})
-	req.Steps = make([]Step, len(stepsI))
+	req.Steps = make([]client.Step, len(stepsI))
 
 	for i, stepI := range stepsI {
 		stepM := stepI.(map[string]interface{})
-		req.Steps[i] = Step{
+		req.Steps[i] = client.Step{
 			Type:                stepM["type"].(string),
 			Name:                stepM["name"].(string),
 			Command:             stepM["command"].(string),
