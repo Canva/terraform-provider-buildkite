@@ -66,7 +66,7 @@ query GetTeam($teamSlug: ID!) {
 
 	teamResponse := teamResponse{}
 	if err := c.graphQLRequest(req, &teamResponse); err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to get team %s", slug)
 	}
 
 	return &teamResponse.Team, nil
@@ -110,7 +110,7 @@ mutation TeamNewMutation($teamCreateInput: TeamCreateInput!) {
 
 	teamCreateResponse := teamCreateResponse{}
 	if err := c.graphQLRequest(req, &teamCreateResponse); err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to create team %s", team.Name)
 	}
 
 	return &teamCreateResponse.TeamCreate.TeamEdge.Node, nil
@@ -147,7 +147,7 @@ mutation TeamUpdateMutation($teamUpdateInput: TeamUpdateInput!) {
 
 	teamUpdateResponse := teamUpdateResponse{}
 	if err := c.graphQLRequest(req, &teamUpdateResponse); err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to update team %s", team.Id)
 	}
 
 	return &teamUpdateResponse.TeamUpdate.Team, nil
@@ -168,7 +168,7 @@ mutation TeamDeleteMutation($teamDeleteInput: TeamDeleteInput!) {
 
 	teamDeleteResponse := teamDeleteResponse{}
 	if err := c.graphQLRequest(req, &teamDeleteResponse); err != nil {
-		return err
+		return errors.Wrapf(err, "failed to delete team %s", id)
 	}
 
 	return nil
