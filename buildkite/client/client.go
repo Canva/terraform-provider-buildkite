@@ -34,12 +34,11 @@ type Client struct {
 
 func NewClient(orgSlug string, apiToken string) *Client {
 	var authTransport http.RoundTripper = NewAuthTransport(apiToken, nil)
-	var buildkiteTransport http.RoundTripper = NewBuildkiteTransport(&authTransport)
 	baseURL, _ := url.Parse(defaultBaseURL)
 
 	return &Client{
 		client: &http.Client{
-			Transport: buildkiteTransport,
+			Transport: authTransport,
 		},
 		graphQl: graphql.NewClient(defaultGraphQLUrl, graphql.WithHTTPClient(&http.Client{
 			Transport: authTransport,

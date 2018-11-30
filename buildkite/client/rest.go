@@ -7,37 +7,6 @@ import (
 	"net/url"
 )
 
-type buildkiteTransport struct {
-	Transport http.RoundTripper
-}
-
-func NewBuildkiteTransport(transport *http.RoundTripper) *buildkiteTransport {
-	if transport == nil {
-		transport = &http.DefaultTransport
-	}
-
-	return &buildkiteTransport{
-		Transport: *transport,
-	}
-}
-
-func (t buildkiteTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	resp, err := t.Transport.RoundTrip(req)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode == http.StatusNotFound {
-		return nil, &NotFound{}
-	}
-
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return nil, fmt.Errorf("%s", resp.Status)
-	}
-
-	return resp, nil
-}
-
 type NotFound struct {
 }
 
@@ -74,6 +43,14 @@ func (c *Client) request(method string, relativePath string, requestBody interfa
 		return err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return &NotFound{}
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return fmt.Errorf("%s", resp.Status)
+	}
 
 	if responseBody != nil {
 		if err = unmarshalResponse(resp.Body, &responseBody); err != nil {

@@ -2,6 +2,7 @@ package provider
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -66,15 +67,15 @@ func TestAccPipeline_basic_github(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("buildkite_pipeline.test_foo", "github_settings.#", "1"),
 					resource.TestCheckResourceAttr("buildkite_pipeline.test_foo", "github_settings.0.build_pull_request_forks", "false"),
-					resource.TestCheckResourceAttr("buildkite_pipeline.test_foo", "github_settings.0.build_pull_requests", "false"),
+					resource.TestCheckResourceAttr("buildkite_pipeline.test_foo", "github_settings.0.build_pull_requests", "true"),
 					resource.TestCheckResourceAttr("buildkite_pipeline.test_foo", "github_settings.0.build_tags", "false"),
-					resource.TestCheckResourceAttr("buildkite_pipeline.test_foo", "github_settings.0.prefix_pull_request_fork_branch_names", "false"),
+					resource.TestCheckResourceAttr("buildkite_pipeline.test_foo", "github_settings.0.prefix_pull_request_fork_branch_names", "true"),
 					resource.TestCheckResourceAttr("buildkite_pipeline.test_foo", "github_settings.0.publish_blocked_as_pending", "false"),
-					resource.TestCheckResourceAttr("buildkite_pipeline.test_foo", "github_settings.0.publish_commit_status", "false"),
+					resource.TestCheckResourceAttr("buildkite_pipeline.test_foo", "github_settings.0.publish_commit_status", "true"),
 					resource.TestCheckResourceAttr("buildkite_pipeline.test_foo", "github_settings.0.publish_commit_status_per_step", "false"),
 					resource.TestCheckResourceAttr("buildkite_pipeline.test_foo", "github_settings.0.pull_request_branch_filter_configuration", ""),
 					resource.TestCheckResourceAttr("buildkite_pipeline.test_foo", "github_settings.0.pull_request_branch_filter_enabled", "false"),
-					resource.TestCheckResourceAttr("buildkite_pipeline.test_foo", "github_settings.0.skip_pull_request_builds_for_existing_commits", "false"),
+					resource.TestCheckResourceAttr("buildkite_pipeline.test_foo", "github_settings.0.skip_pull_request_builds_for_existing_commits", "true"),
 					resource.TestCheckResourceAttr("buildkite_pipeline.test_foo", "github_settings.0.trigger_mode", "deployment"),
 					resource.TestCheckResourceAttr("buildkite_pipeline.test_foo", "bitbucket_settings.#", "0"),
 				),
@@ -152,6 +153,9 @@ func testAccCheckBuildkitePipelineDestroy(s *terraform.State) error {
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "buildkite_pipeline" {
+			continue
+		}
+		if !strings.HasPrefix(rs.Primary.Attributes["name"], "tf-acc-") {
 			continue
 		}
 

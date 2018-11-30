@@ -141,6 +141,11 @@ func resourcePipeline() *schema.Resource {
 				ConflictsWith: []string{"github_settings"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"trigger_mode": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "code",
+						},
 						"build_pull_requests": &schema.Schema{
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -156,6 +161,11 @@ func resourcePipeline() *schema.Resource {
 							Optional: true,
 						},
 						"skip_pull_request_builds_for_existing_commits": &schema.Schema{
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"prefix_pull_request_fork_branch_names": &schema.Schema{
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
@@ -189,6 +199,7 @@ func resourcePipeline() *schema.Resource {
 						"trigger_mode": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "code",
 						},
 						"build_pull_requests": &schema.Schema{
 							Type:     schema.TypeBool,
@@ -206,6 +217,7 @@ func resourcePipeline() *schema.Resource {
 						"skip_pull_request_builds_for_existing_commits": &schema.Schema{
 							Type:     schema.TypeBool,
 							Optional: true,
+							Default:  true,
 						},
 						"build_pull_request_forks": &schema.Schema{
 							Type:     schema.TypeBool,
@@ -214,6 +226,7 @@ func resourcePipeline() *schema.Resource {
 						"prefix_pull_request_fork_branch_names": &schema.Schema{
 							Type:     schema.TypeBool,
 							Optional: true,
+							Default:  true,
 						},
 						"build_tags": &schema.Schema{
 							Type:     schema.TypeBool,
