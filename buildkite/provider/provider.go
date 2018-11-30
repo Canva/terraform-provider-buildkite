@@ -10,7 +10,8 @@ import (
 func Provider() terraform.ResourceProvider {
 	return &schema.Provider{
 		ResourcesMap: map[string]*schema.Resource{
-			"buildkite_pipeline": resourcePipeline(),
+			"buildkite_team":       resourceTeam(),
+			"buildkite_pipeline":   resourcePipeline(),
 		},
 
 		Schema: map[string]*schema.Schema{

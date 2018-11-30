@@ -2,12 +2,16 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 
+	"github.com/machinebox/graphql"
 	"github.com/pkg/errors"
 
 	"github.com/saymedia/terraform-buildkite/buildkite/version"
@@ -15,90 +19,44 @@ import (
 
 const (
 	defaultBaseURL             = "https://api.buildkite.com/"
+	defaultGraphQLUrl          = "https://graphql.buildkite.com/v1"
 	userAgent                  = "Terraform-Buildkite/" + version.Version
 	applicationJsonContentType = "application/json"
 )
 
 type Client struct {
 	client   *http.Client
+	graphQl  *graphql.Client
 	baseURL  *url.URL
 	orgSlug  string
 	apiToken string
 }
 
 func NewClient(orgSlug string, apiToken string) *Client {
-	var transport http.RoundTripper = NewAuthTransport(apiToken, nil)
+	var authTransport http.RoundTripper = NewAuthTransport(apiToken, nil)
+	var buildkiteTransport http.RoundTripper = NewBuildkiteTransport(&authTransport)
 	baseURL, _ := url.Parse(defaultBaseURL)
 
 	return &Client{
 		client: &http.Client{
-			Transport: transport,
+			Transport: buildkiteTransport,
 		},
+		graphQl: graphql.NewClient(defaultGraphQLUrl, graphql.WithHTTPClient(&http.Client{
+			Transport: authTransport,
+		})),
 		baseURL:  baseURL,
 		orgSlug:  orgSlug,
 		apiToken: apiToken,
 	}
 }
 
-func (c *Client) get(relativePath string, responseBody interface{}) error {
-	return c.request("GET", relativePath, nil, responseBody)
+func (c *Client) graphQLRequest(req *graphql.Request, result interface{}) error {
+	ctx := context.Background()
+	return c.graphQl.Run(ctx, req, &result)
 }
 
-func (c *Client) post(relativePath string, requestBody interface{}, responseBody interface{}) error {
-	return c.request("POST", relativePath, requestBody, responseBody)
-}
-
-func (c *Client) patch(relativePath string, requestBody interface{}, responseBody interface{}) error {
-	return c.request("PATCH", relativePath, requestBody, responseBody)
-}
-
-func (c *Client) delete(relativePath string, responseBody interface{}) error {
-	return c.request("DELETE", relativePath, nil, responseBody)
-}
-
-func (c *Client) request(method string, relativePath string, requestBody interface{}, responseBody interface{}) error {
-	log.Printf("[DEBUG] Buildkite Request %s %s\n", method, relativePath)
-
-	req, err := createRequest(method, c.urlPath(relativePath), requestBody)
-	if err != nil {
-		return err
-	}
-
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if responseBody != nil {
-		if err = unmarshalResponse(resp, &responseBody); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *Client) urlPath(relativePath string) string {
-	return c.baseURL.ResolveReference(&url.URL{
-		Path: relativePath,
-	}).String()
-}
-
-func createRequest(method string, url string, requestBody interface{}) (*http.Request, error) {
-	if requestBody == nil {
-		return http.NewRequest(method, url, nil)
-	}
-
-	body, err := marshalBody(requestBody)
-	if err != nil {
-		return nil, err
-	}
-	req, err := http.NewRequest(method, url, body)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Content-Type", applicationJsonContentType)
-	return req, nil
+func (c *Client) createOrgSlug(slug string) string {
+	return fmt.Sprintf("%s/%s", c.orgSlug, slug)
 }
 
 func marshalBody(body interface{}) (*bytes.Buffer, error) {
@@ -114,8 +72,8 @@ func marshalBody(body interface{}) (*bytes.Buffer, error) {
 	return bytes.NewBuffer(bodyBytes), nil
 }
 
-func unmarshalResponse(resp *http.Response, result interface{}) error {
-	responseBytes, err := ioutil.ReadAll(resp.Body)
+func unmarshalResponse(body io.Reader, result interface{}) error {
+	responseBytes, err := ioutil.ReadAll(body)
 	if err != nil {
 		return errors.Wrap(err, "could not read response body")
 	}

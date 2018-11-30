@@ -193,6 +193,7 @@ func resourcePipeline() *schema.Resource {
 						"build_pull_requests": &schema.Schema{
 							Type:     schema.TypeBool,
 							Optional: true,
+							Default:  true,
 						},
 						"pull_request_branch_filter_enabled": &schema.Schema{
 							Type:     schema.TypeBool,
@@ -221,6 +222,7 @@ func resourcePipeline() *schema.Resource {
 						"publish_commit_status": &schema.Schema{
 							Type:     schema.TypeBool,
 							Optional: true,
+							Default:  true,
 						},
 						"publish_commit_status_per_step": &schema.Schema{
 							Type:     schema.TypeBool,
