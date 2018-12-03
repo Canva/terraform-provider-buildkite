@@ -6,9 +6,11 @@ import (
 )
 
 type orgIdResponse struct {
-	Organization struct {
-		Id string `json:"id"`
-	} `json:"organization"`
+	Organization Node `json:"organization"`
+}
+
+type Node struct {
+	Id string `json:"id,omitempty"`
 }
 
 var (

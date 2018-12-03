@@ -50,8 +50,18 @@ func NewClient(orgSlug string, apiToken string) *Client {
 }
 
 func (c *Client) graphQLRequest(req *graphql.Request, result interface{}) error {
-	ctx := context.Background()
-	return c.graphQl.Run(ctx, req, &result)
+	jsonBytes, _ := json.MarshalIndent(req, "", "  ")
+	log.Printf("[TRACE] GraphQL request %s", string(jsonBytes))
+
+	err := c.graphQl.Run(context.Background(), req, &result)
+	if err != nil {
+		log.Printf("[TRACE] GraphQL error %v", err)
+		return err
+	}
+
+	jsonBytes, _ = json.MarshalIndent(result, "", "  ")
+	log.Printf("[TRACE] GraphQL response %s", string(jsonBytes))
+	return nil
 }
 
 func (c *Client) createOrgSlug(slug string) string {
