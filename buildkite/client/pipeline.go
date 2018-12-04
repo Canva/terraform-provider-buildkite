@@ -2,6 +2,8 @@ package client
 
 import (
 	"fmt"
+
+	"github.com/machinebox/graphql"
 )
 
 type Pipeline struct {
@@ -40,6 +42,10 @@ type Step struct {
 	ArtifactPaths       string            `json:"artifact_paths,omitempty"`
 	Concurrency         int               `json:"concurrency,omitempty"`
 	Parallelism         int               `json:"parallelism,omitempty"`
+}
+
+type pipelineIdResponse struct {
+	Pipeline Node `json:"pipeline"`
 }
 
 func (c *Client) GetPipeline(slug string) (*Pipeline, error) {
@@ -83,4 +89,21 @@ func (c *Client) DeletePipeline(slug string) error {
 	}
 
 	return nil
+}
+
+func (c *Client) GetPipelineNodeId(slug string) (string, error) {
+	req := graphql.NewRequest(`
+query GetPipelineId($pipelineSlug: ID!) {
+  pipeline(slug: $pipelineSlug) {
+    id
+  }
+}`)
+	req.Var("pipelineSlug", c.createOrgSlug(slug))
+
+	idResponse := pipelineIdResponse{}
+	if err := c.graphQLRequest(req, &idResponse); err != nil {
+		return "", err
+	}
+
+	return idResponse.Pipeline.Id, nil
 }

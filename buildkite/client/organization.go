@@ -10,7 +10,8 @@ type orgIdResponse struct {
 }
 
 type Node struct {
-	Id string `json:"id,omitempty"`
+	Id   string `json:"id,omitempty"`
+	Slug string `json:"Slug,omitempty"`
 }
 
 var (
