@@ -22,118 +22,118 @@ func resourcePipeline() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"slug": &schema.Schema{
+			"slug": {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
 			},
-			"web_url": &schema.Schema{
+			"web_url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"builds_url": &schema.Schema{
+			"builds_url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": &schema.Schema{
+			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"url": &schema.Schema{
+			"url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"badge_url": &schema.Schema{
+			"badge_url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"repository": &schema.Schema{
+			"repository": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"branch_configuration": &schema.Schema{
+			"branch_configuration": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"default_branch": &schema.Schema{
+			"default_branch": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "master",
 			},
-			"env": &schema.Schema{
+			"env": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
-			"webhook_url": &schema.Schema{
+			"webhook_url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"step": &schema.Schema{
+			"step": {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": &schema.Schema{
+						"type": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"name": &schema.Schema{
+						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"command": &schema.Schema{
+						"command": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"env": &schema.Schema{
+						"env": {
 							Type:     schema.TypeMap,
 							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
 						},
-						"timeout_in_minutes": &schema.Schema{
+						"timeout_in_minutes": {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"agent_query_rules": &schema.Schema{
+						"agent_query_rules": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
 						},
-						"artifact_paths": &schema.Schema{
+						"artifact_paths": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"branch_configuration": &schema.Schema{
+						"branch_configuration": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"concurrency": &schema.Schema{
+						"concurrency": {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"parallelism": &schema.Schema{
+						"parallelism": {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
 					},
 				},
 			},
-			"bitbucket_settings": &schema.Schema{
+			"bitbucket_settings": {
 				Type:          schema.TypeList,
 				Optional:      true,
 				Computed:      true,
@@ -141,46 +141,46 @@ func resourcePipeline() *schema.Resource {
 				ConflictsWith: []string{"github_settings"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"trigger_mode": &schema.Schema{
+						"trigger_mode": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "code",
 						},
-						"build_pull_requests": &schema.Schema{
+						"build_pull_requests": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
 						},
-						"pull_request_branch_filter_enabled": &schema.Schema{
+						"pull_request_branch_filter_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
 						},
-						"pull_request_branch_filter_configuration": &schema.Schema{
+						"pull_request_branch_filter_configuration": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"skip_pull_request_builds_for_existing_commits": &schema.Schema{
+						"skip_pull_request_builds_for_existing_commits": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
 						},
-						"prefix_pull_request_fork_branch_names": &schema.Schema{
+						"prefix_pull_request_fork_branch_names": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
 						},
-						"build_tags": &schema.Schema{
+						"build_tags": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
 						},
-						"publish_commit_status": &schema.Schema{
+						"publish_commit_status": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
 						},
-						"publish_commit_status_per_step": &schema.Schema{
+						"publish_commit_status_per_step": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
@@ -188,7 +188,7 @@ func resourcePipeline() *schema.Resource {
 					},
 				},
 			},
-			"github_settings": &schema.Schema{
+			"github_settings": {
 				Type:          schema.TypeList,
 				Optional:      true,
 				Computed:      true,
@@ -196,56 +196,56 @@ func resourcePipeline() *schema.Resource {
 				ConflictsWith: []string{"bitbucket_settings"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"trigger_mode": &schema.Schema{
+						"trigger_mode": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "code",
 						},
-						"build_pull_requests": &schema.Schema{
+						"build_pull_requests": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
 						},
-						"pull_request_branch_filter_enabled": &schema.Schema{
+						"pull_request_branch_filter_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"pull_request_branch_filter_configuration": &schema.Schema{
+						"pull_request_branch_filter_configuration": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"skip_pull_request_builds_for_existing_commits": &schema.Schema{
+						"skip_pull_request_builds_for_existing_commits": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
 						},
-						"build_pull_request_forks": &schema.Schema{
+						"build_pull_request_forks": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"prefix_pull_request_fork_branch_names": &schema.Schema{
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"build_tags": &schema.Schema{
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"publish_commit_status": &schema.Schema{
+						"prefix_pull_request_fork_branch_names": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
 						},
-						"publish_commit_status_per_step": &schema.Schema{
+						"build_tags": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"publish_blocked_as_pending": &schema.Schema{
+						"publish_commit_status": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"publish_commit_status_per_step": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"separate_pull_request_statuses": &schema.Schema{
+						"publish_blocked_as_pending": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"separate_pull_request_statuses": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
