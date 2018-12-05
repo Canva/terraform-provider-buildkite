@@ -3,11 +3,14 @@ package provider
 import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
+	"log"
 
 	"github.com/saymedia/terraform-buildkite/buildkite/client"
+	"github.com/saymedia/terraform-buildkite/buildkite/version"
 )
 
 func Provider() terraform.ResourceProvider {
+	log.Printf("[DEBUG] Buildkite provider version %s", version.Version)
 	return &schema.Provider{
 		ResourcesMap: map[string]*schema.Resource{
 			"buildkite_org_member":    resourceOrgMember(),

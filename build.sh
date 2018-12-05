@@ -2,7 +2,7 @@
 set -ex
 IFS=$' \n\t'
 
-export PROVIDER_VERSION="0.0.3"
+export PROVIDER_VERSION="0.1.0"
 export DISTDIR="$PWD/dist"
 export WORKDIR="$PWD"
 
@@ -16,7 +16,11 @@ GO111MODULE=off go get github.com/mitchellh/gox
 # there are deb packages for those.
 
 # Build the provider
-gox -arch="$GOX_ARCH" -os="$GOX_OS" -output="$GOX_MAIN_TEMPLATE" github.com/saymedia/terraform-buildkite/terraform-provider-buildkite
+gox -arch="$GOX_ARCH" \
+    -os="$GOX_OS" \
+    -ldflags="-X github.com/saymedia/terraform-buildkite/buildkite/version.Version=${PROVIDER_VERSION}" \
+    -output="$GOX_MAIN_TEMPLATE" \
+    github.com/saymedia/terraform-buildkite/cmd/terraform-provider-buildkite
 
 # ZZZZZZZZZZZZZZZZZZZZIPPIT
 echo "--- Build done"

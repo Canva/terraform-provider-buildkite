@@ -1,3 +1,4 @@
 package version
 
-const Version = "2.0.0"
+// filled in by build script
+var Version = "0.0.0-dev"

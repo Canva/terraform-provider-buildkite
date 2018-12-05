@@ -20,7 +20,7 @@ import (
 const (
 	defaultBaseURL             = "https://api.buildkite.com/"
 	defaultGraphQLUrl          = "https://graphql.buildkite.com/v1"
-	userAgent                  = "Terraform-Buildkite/" + version.Version
+	userAgent                  = "Terraform-Buildkite/"
 	applicationJsonContentType = "application/json"
 )
 
@@ -33,7 +33,7 @@ type Client struct {
 }
 
 func NewClient(orgSlug string, apiToken string) *Client {
-	var authTransport http.RoundTripper = NewAuthTransport(apiToken, nil)
+	var authTransport http.RoundTripper = NewAuthTransport(apiToken, userAgent+version.Version, nil)
 	baseURL, _ := url.Parse(defaultBaseURL)
 
 	return &Client{
