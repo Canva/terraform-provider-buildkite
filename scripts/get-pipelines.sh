@@ -1,7 +1,5 @@
 #!/bin/bash
 
-FILE=pipelines.tf
-
 print_attr() {
     value="$(echo $1 | jq ".$2")"
     if [[ "$?" -ne 0 ]] ; then
@@ -59,10 +57,11 @@ print_github_settings() {
 }
 
 get_team_pipelines() {
-    local api_key org_slug pipeline
+    local api_key org_slug pipeline file
     api_key="$1"
     org_slug="$2"
     pipeline="$3"
+    file="$4"
 
     curl -s \
         -H 'content-type: application/json' \
@@ -86,7 +85,7 @@ get_team_pipelines() {
 
             echo "terraform import buildkite_team_pipeline.${team_name}_${pipeline_name} ${id}"
 
-            cat <<EOF >> "${FILE}"
+            cat <<EOF >> "${file}"
 resource "buildkite_team_pipeline" "${team_name}_${pipeline_name}" {
   team_id       = "\${buildkite_team.${team_name}.team_id}"
   pipeline_slug = "\${buildkite_pipeline.${pipeline_name}.slug}"
@@ -109,8 +108,6 @@ $0 <api-key> <org-slug>
     api_key="$1"
     org_slug="$2"
 
-    rm -f "${FILE}"
-
     curl -s \
         -H 'content-type: application/json' \
         -H "Authorization: Bearer $api_key" \
@@ -123,7 +120,9 @@ $0 <api-key> <org-slug>
 
             echo "terraform import buildkite_pipeline.${tf_name} ${slug}"
 
-            cat <<EOF >> "${FILE}"
+            file="terraform/pipeline_${tf_name}.tf"
+
+            cat <<EOF > "${file}"
 resource "buildkite_pipeline" "${tf_name}" {
   name            = "$(echo ${node} | jq -r '.name')"
 $(print_attr "${node}" description)
@@ -135,9 +134,7 @@ $(echo ${node} | jq -c '.steps[]' | while read -r step; do print_step "$step"; d
 }
 EOF
 
-            get_team_pipelines "$api_key" "$org_slug" "$slug"
-
-            echo "" >> "${FILE}"
+            get_team_pipelines "$api_key" "$org_slug" "$slug" "$file"
         done
 }
 

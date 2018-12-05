@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FILE=teams.tf
+FILE="terraform/teams.tf"
 
 main() {
     local api_key org_slug

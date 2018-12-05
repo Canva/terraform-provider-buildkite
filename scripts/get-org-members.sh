@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FILE=org_members.tf
+FILE="terraform/org_members.tf"
 
 main() {
     local api_key org_slug
