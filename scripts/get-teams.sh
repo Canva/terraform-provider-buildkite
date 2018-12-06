@@ -1,21 +1,26 @@
 #!/bin/bash
 
-FILE="terraform/teams.tf"
-
 main() {
-    local api_key org_slug
+    local api_key org_slug module file
 
     if [[ $# -lt 2 ]] ; then
         echo "You need to provide an api_key and org_slug:
-$0 <api-key> <org-slug>
+
+$0 <api-key> <org-slug> [<module>]
+
 " 1>&2
         exit 1
     fi
 
     api_key="$1"
     org_slug="$2"
+    module="${3-buildkite}"
+    file="terraform/${module}/org_teams.tf"
+    resource_prefix="module.${module}."
 
-    rm -f "${FILE}"
+    mkdir -p "$(dirname "$file")"
+
+    rm -f "${file}"
 
     curl -s \
         -H 'content-type: application/json' \
@@ -33,13 +38,13 @@ $0 <api-key> <org-slug>
                 continue
             fi
 
-            echo "// ${slug}" >> "${FILE}"
+            echo "// ${slug}" >> "${file}"
             tf_name="$(echo ${node} | jq -r '.name' | tr '.+-' '___')"
             name="$(echo ${node} | jq -r '.name')"
 
-            echo "terraform import buildkite_team.${tf_name} ${slug}"
+            echo "terraform import ${resource_prefix}buildkite_team.${tf_name} ${slug}"
 
-            cat <<EOF >> "${FILE}"
+            cat <<EOF >> "${file}"
 resource "buildkite_team" "${tf_name}" {
   name = "${name}"
 }
@@ -50,9 +55,9 @@ EOF
                 role="$(echo "${member}" | jq -r '.role')"
                 user_name="$(echo "${member}" | jq -r '.user.email' | cut -f1 -d@ | tr '.+-' '___')"
 
-                echo "terraform import buildkite_team_member.${user_name}_${tf_name} ${member_id}"
+                echo "terraform import ${resource_prefix}buildkite_team_member.${user_name}_${tf_name} ${member_id}"
 
-                cat <<EOF >> "${FILE}"
+                cat <<EOF >> "${file}"
 resource "buildkite_team_member" "${user_name}_${tf_name}" {
   user_id = "\${buildkite_org_member.${user_name}.user_id}"
   team_id = "\${buildkite_team.${tf_name}.team_id}"
@@ -61,8 +66,10 @@ resource "buildkite_team_member" "${user_name}_${tf_name}" {
 EOF
 
             done
-            echo "" >> "${FILE}"
+            echo "" >> "${file}"
         done
+
+    terraform fmt "${file}" > /dev/null
 }
 
 main "$@"

@@ -57,11 +57,12 @@ print_github_settings() {
 }
 
 get_team_pipelines() {
-    local api_key org_slug pipeline file
+    local api_key org_slug pipeline resource_prefix file
     api_key="$1"
     org_slug="$2"
     pipeline="$3"
-    file="$4"
+    resource_prefix="$4"
+    file="$5"
 
     curl -s \
         -H 'content-type: application/json' \
@@ -83,7 +84,7 @@ get_team_pipelines() {
             team_name="$(echo ${team_slug} | tr '.+-' '___')"
             pipeline_name="$(echo ${pipeline} | tr '.+-' '___')"
 
-            echo "terraform import buildkite_team_pipeline.${team_name}_${pipeline_name} ${id}"
+            echo "terraform import ${resource_prefix}buildkite_team_pipeline.${team_name}_${pipeline_name} ${id}"
 
             cat <<EOF >> "${file}"
 resource "buildkite_team_pipeline" "${team_name}_${pipeline_name}" {
@@ -96,17 +97,23 @@ EOF
 }
 
 main() {
-    local api_key org_slug
+    local api_key org_slug module file
 
     if [[ $# -lt 2 ]] ; then
         echo "You need to provide an api_key and org_slug:
-$0 <api-key> <org-slug>
+
+$0 <api-key> <org-slug> [<module>]
+
 " 1>&2
         exit 1
     fi
 
     api_key="$1"
     org_slug="$2"
+    module="${3-buildkite}"
+    resource_prefix="module.${module}."
+
+    mkdir -p "$(dirname "$file")"
 
     curl -s \
         -H 'content-type: application/json' \
@@ -118,9 +125,9 @@ $0 <api-key> <org-slug>
             slug="$(echo ${node} | jq -r '.slug')"
             tf_name="$(echo ${node} | jq -r '.slug' | tr '.+-' '___')"
 
-            echo "terraform import buildkite_pipeline.${tf_name} ${slug}"
+            echo "terraform import ${resource_prefix}buildkite_pipeline.${tf_name} ${slug}"
 
-            file="terraform/pipeline_${tf_name}.tf"
+            file="terraform/${module}/pipeline_${tf_name}.tf"
 
             cat <<EOF > "${file}"
 resource "buildkite_pipeline" "${tf_name}" {
@@ -134,7 +141,9 @@ $(echo ${node} | jq -c '.steps[]' | while read -r step; do print_step "$step"; d
 }
 EOF
 
-            get_team_pipelines "$api_key" "$org_slug" "$slug" "$file"
+            get_team_pipelines "${api_key}" "${org_slug}" "${slug}" "${resource_prefix}" "${file}"
+
+            terraform fmt "${file}" > /dev/null
         done
 }
 
