@@ -53,7 +53,7 @@ func resourceTeam() *schema.Resource {
 			"privacy": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      client.TeamPrivacySecret,
+				Default:      client.TeamPrivacyVisible,
 				ValidateFunc: validation.StringInSlice(ValidTeamPrivacy, false),
 			},
 			"default_member_role": {
