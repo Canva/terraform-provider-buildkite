@@ -249,6 +249,10 @@ func resourcePipeline() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+						"commit_status_404s": {
+							Type: schema.TypeInt,
+							Optional: true,
+						},
 					},
 				},
 			},
