@@ -1,0 +1,49 @@
+<% wrap_layout :inner do %>
+    <% content_for :sidebar do %>
+        <div class="docs-sidebar hidden-print affix-top" role="complementary">
+            <ul class="nav docs-sidenav">
+                <li<%= sidebar_current("docs-home") %>>
+                    <a href="/docs/providers/index.html">All Providers</a>
+                </li>
+
+                <li<%= sidebar_current("docs-buildkite-index") %>>
+                    <a href="/docs/providers/buildkite/index.html">Buildkite Provider</a>
+                </li>
+
+                <li<%= sidebar_current("docs-buildkite-resource") %>>
+                    <a href="#">Resources</a>
+                    <ul class="nav nav-visible">
+
+                        <li<%= sidebar_current("docs-buildkite-resource-org-member") %>>
+                            <a href="/docs/providers/buildkite/r/org_member.html">buildkite_org_member</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-buildkite-pipeline") %>>
+                            <a href="/docs/providers/buildkite/r/pipeline.html">buildkite_pipeline</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-buildkite-pipeline-schedule") %>>
+                            <a href="/docs/providers/buildkite/r/pipeline_schedule.html">buildkite_pipeline_schedule</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-buildkite-resource-team") %>>
+                            <a href="/docs/providers/buildkite/r/team.html">buildkite_team</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-buildkite-resource-team-member") %>>
+                            <a href="/docs/providers/buildkite/r/team_member.html">buildkite_team_member</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-buildkite-resource-team-pipeline") %>>
+                            <a href="/docs/providers/buildkite/r/team_pipeline.html">buildkite_team_pipeline</a>
+                        </li>
+
+                    </ul>
+                </li>
+
+            </ul>
+        </div>
+    <% end %>
+
+    <%= yield %>
+<% end %>
