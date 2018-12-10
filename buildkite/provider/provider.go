@@ -13,11 +13,12 @@ func Provider() terraform.ResourceProvider {
 	log.Printf("[DEBUG] Buildkite provider version %s", version.Version)
 	return &schema.Provider{
 		ResourcesMap: map[string]*schema.Resource{
-			"buildkite_org_member":    resourceOrgMember(),
-			"buildkite_pipeline":      resourcePipeline(),
-			"buildkite_team":          resourceTeam(),
-			"buildkite_team_member":   resourceTeamMember(),
-			"buildkite_team_pipeline": resourceTeamPipeline(),
+			"buildkite_org_member":        resourceOrgMember(),
+			"buildkite_pipeline":          resourcePipeline(),
+			"buildkite_pipeline_schedule": resourcePipelineSchedule(),
+			"buildkite_team":              resourceTeam(),
+			"buildkite_team_member":       resourceTeamMember(),
+			"buildkite_team_pipeline":     resourceTeamPipeline(),
 		},
 
 		Schema: map[string]*schema.Schema{
