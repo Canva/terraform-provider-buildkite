@@ -15,6 +15,18 @@ Which gives you a `terraform-provider-buildkite` in `$GOPATH/bin`.
 
 ## Usage
 
+Check [provider configuration](website/docs/index.html.markdown) for information about how to configure the provider.
+
+This provider manages the following resources:
+
+* [buildkite_org_member](website/docs/r/org_member.md)
+* [buildkite_pipeline](website/docs/r/pipeline.md)
+* [buildkite_pipeline_schedule](website/docs/r/pipeline_schedule.md)
+* [buildkite_team](website/docs/r/buildkite_team.md)
+* [buildkite_team_member](website/docs/r/buildkite_team_member.md)
+* [buildkite_team_pipeline](website/docs/r/buildkite_team_pipeline.md)
+
+### Pipeline example
 ```terraform
 provider "buildkite" {
   # Get an API token from https://buildkite.com/user/api-access-tokens
