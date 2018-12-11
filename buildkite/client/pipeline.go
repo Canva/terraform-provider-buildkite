@@ -8,7 +8,7 @@ import (
 
 type Pipeline struct {
 	Id                  string                 `json:"id,omitempty"`
-	Environment         map[string]string      `json:"env,omitempty"`
+	Environment         map[string]string      `json:"env"`
 	Slug                string                 `json:"slug,omitempty"`
 	WebURL              string                 `json:"web_url,omitempty"`
 	BuildsURL           string                 `json:"builds_url,omitempty"`
@@ -18,11 +18,11 @@ type Pipeline struct {
 	CreatedAt           string                 `json:"created_at,omitempty"`
 	Repository          string                 `json:"repository,omitempty"`
 	Name                string                 `json:"name,omitempty"`
-	Description         string                 `json:"description,omitempty"`
-	BranchConfiguration string                 `json:"branch_configuration,omitempty"`
+	Description         string                 `json:"description"`
+	BranchConfiguration string                 `json:"branch_configuration"`
 	Provider            BuildkiteProvider      `json:"provider,omitempty"`
 	ProviderSettings    map[string]interface{} `json:"provider_settings,omitempty"`
-	Steps               []Step                 `json:"steps,omitempty"`
+	Steps               []Step                 `json:"steps"`
 }
 
 type BuildkiteProvider struct {
@@ -35,11 +35,11 @@ type Step struct {
 	Type                string            `json:"type"`
 	Name                string            `json:"name,omitempty"`
 	Command             string            `json:"command,omitempty"`
-	Environment         map[string]string `json:"env,omitempty"`
+	Environment         map[string]string `json:"env"`
 	TimeoutInMinutes    int               `json:"timeout_in_minutes,omitempty"`
-	AgentQueryRules     []string          `json:"agent_query_rules,omitempty"`
-	BranchConfiguration string            `json:"branch_configuration,omitempty"`
-	ArtifactPaths       string            `json:"artifact_paths,omitempty"`
+	AgentQueryRules     []string          `json:"agent_query_rules"`
+	BranchConfiguration string            `json:"branch_configuration"`
+	ArtifactPaths       string            `json:"artifact_paths"`
 	Concurrency         int               `json:"concurrency,omitempty"`
 	Parallelism         int               `json:"parallelism,omitempty"`
 }
@@ -73,7 +73,7 @@ func (c *Client) CreatePipeline(pipeline *Pipeline) (*Pipeline, error) {
 func (c *Client) UpdatePipeline(pipeline *Pipeline) (*Pipeline, error) {
 	result := Pipeline{}
 	relativePath := fmt.Sprintf("/v2/organizations/%s/pipelines/%s", c.orgSlug, pipeline.Slug)
-	err := c.patch(relativePath, pipeline, result)
+	err := c.patch(relativePath, pipeline, &result)
 	if err != nil {
 		return nil, err
 	}

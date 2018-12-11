@@ -25,7 +25,6 @@ func resourcePipeline() *schema.Resource {
 			"slug": {
 				Type:     schema.TypeString,
 				Computed: true,
-				Optional: true,
 			},
 			"web_url": {
 				Type:     schema.TypeString,
@@ -250,7 +249,7 @@ func resourcePipeline() *schema.Resource {
 							Optional: true,
 						},
 						"commit_status_404s": {
-							Type: schema.TypeInt,
+							Type:     schema.TypeInt,
 							Optional: true,
 						},
 					},

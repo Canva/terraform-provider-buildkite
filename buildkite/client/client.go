@@ -77,6 +77,7 @@ func marshalBody(body interface{}) (*bytes.Buffer, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "could not marshal body")
 	}
+	log.Printf("[TRACE] Buildkite Request body %s\n", string(bodyBytes))
 
 	return bytes.NewBuffer(bodyBytes), nil
 }
@@ -88,7 +89,7 @@ func unmarshalResponse(body io.Reader, result interface{}) error {
 	}
 	log.Printf("[TRACE] Buildkite Response body %s\n", string(responseBytes))
 
-	err = json.Unmarshal(responseBytes, &result)
+	err = json.Unmarshal(responseBytes, result)
 	if err != nil {
 		return errors.Wrap(err, "could not unmarshal response body")
 	}
