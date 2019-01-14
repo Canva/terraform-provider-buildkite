@@ -68,8 +68,9 @@ func resourcePipeline() *schema.Resource {
 				Default:  "master",
 			},
 			"env": {
-				Type:     schema.TypeMap,
-				Optional: true,
+				Type:          schema.TypeMap,
+				Optional:      true,
+				ConflictsWith: []string{"configuration"},
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -81,7 +82,7 @@ func resourcePipeline() *schema.Resource {
 			"configuration": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"step"},
+				ConflictsWith: []string{"step", "env"},
 			},
 			"step": {
 				Type:          schema.TypeList,
