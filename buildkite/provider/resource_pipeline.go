@@ -78,9 +78,15 @@ func resourcePipeline() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"configuration": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"step"},
+			},
 			"step": {
-				Type:     schema.TypeList,
-				Required: true,
+				Type:          schema.TypeList,
+				Optional:      true,
+				ConflictsWith: []string{"configuration"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -329,6 +335,7 @@ func updatePipelineFromAPI(d *schema.ResourceData, p *client.Pipeline) error {
 	d.Set("builds_url", p.BuildsURL)
 	d.Set("branch_configuration", p.BranchConfiguration)
 	d.Set("default_branch", p.DefaultBranch)
+	d.Set("configuration", p.Configuration)
 
 	stepMap := make([]interface{}, len(p.Steps))
 	for i, element := range p.Steps {
@@ -412,30 +419,34 @@ func preparePipelineRequestPayload(d *schema.ResourceData) *client.Pipeline {
 		req.Environment[k] = vI.(string)
 	}
 
-	stepsI := d.Get("step").([]interface{})
-	req.Steps = make([]client.Step, len(stepsI))
+	if val, ok := d.GetOk("configuration"); ok {
+		req.Configuration = val.(string)
+	} else {
+		stepsI := d.Get("step").([]interface{})
+		req.Steps = make([]client.Step, len(stepsI))
 
-	for i, stepI := range stepsI {
-		stepM := stepI.(map[string]interface{})
-		req.Steps[i] = client.Step{
-			Type:                stepM["type"].(string),
-			Name:                stepM["name"].(string),
-			Command:             stepM["command"].(string),
-			Environment:         map[string]string{},
-			AgentQueryRules:     make([]string, len(stepM["agent_query_rules"].([]interface{}))),
-			BranchConfiguration: stepM["branch_configuration"].(string),
-			ArtifactPaths:       stepM["artifact_paths"].(string),
-			Concurrency:         stepM["concurrency"].(int),
-			Parallelism:         stepM["parallelism"].(int),
-			TimeoutInMinutes:    stepM["timeout_in_minutes"].(int),
-		}
+		for i, stepI := range stepsI {
+			stepM := stepI.(map[string]interface{})
+			req.Steps[i] = client.Step{
+				Type:                stepM["type"].(string),
+				Name:                stepM["name"].(string),
+				Command:             stepM["command"].(string),
+				Environment:         map[string]string{},
+				AgentQueryRules:     make([]string, len(stepM["agent_query_rules"].([]interface{}))),
+				BranchConfiguration: stepM["branch_configuration"].(string),
+				ArtifactPaths:       stepM["artifact_paths"].(string),
+				Concurrency:         stepM["concurrency"].(int),
+				Parallelism:         stepM["parallelism"].(int),
+				TimeoutInMinutes:    stepM["timeout_in_minutes"].(int),
+			}
 
-		for k, vI := range stepM["env"].(map[string]interface{}) {
-			req.Steps[i].Environment[k] = vI.(string)
-		}
+			for k, vI := range stepM["env"].(map[string]interface{}) {
+				req.Steps[i].Environment[k] = vI.(string)
+			}
 
-		for j, vI := range stepM["agent_query_rules"].([]interface{}) {
-			req.Steps[i].AgentQueryRules[j] = vI.(string)
+			for j, vI := range stepM["agent_query_rules"].([]interface{}) {
+				req.Steps[i].AgentQueryRules[j] = vI.(string)
+			}
 		}
 	}
 
