@@ -248,6 +248,10 @@ var (
 						Type:     schema.TypeInt,
 						Optional: true,
 					},
+					"filter_enabled": {
+						Type:     schema.TypeBool,
+						Optional: true,
+					},
 				},
 			},
 		},
