@@ -132,8 +132,6 @@ For more information about steps, take a look at the [official documentation](ht
 
 * `separate_pull_request_statuses` - (Optional) Publish separate status for the pull request itself.
 
-* `commit_status_404s` - (Optional)
-
 
 ## Attributes Reference
 
