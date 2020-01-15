@@ -22,6 +22,7 @@ type Pipeline struct {
 	BranchConfiguration string                 `json:"branch_configuration"`
 	Provider            BuildkiteProvider      `json:"provider,omitempty"`
 	ProviderSettings    map[string]interface{} `json:"provider_settings,omitempty"`
+	TeamUUIDs           []string               `json:"team_uuids,omitempty"`
 	Steps               []Step                 `json:"steps,omitempty"`
 
 	// Configuration is the "new" YAML based pipeline setup
@@ -70,9 +71,9 @@ func (c *Client) GetPipeline(slug string) (*Pipeline, error) {
 }
 
 func (c *Client) CreatePipeline(pipeline *Pipeline) (*Pipeline, error) {
-	// Create via the GraphQL API if the YAML based configuration is used
+	// Create via the REST API if the YAML based configuration is used
 	if len(pipeline.Configuration) > 0 {
-		return c.createPipelineGraphQl(pipeline)
+		return c.createYAMLPipeline(pipeline)
 	}
 
 	result := Pipeline{}
@@ -85,50 +86,26 @@ func (c *Client) CreatePipeline(pipeline *Pipeline) (*Pipeline, error) {
 	return &result, nil
 }
 
-// createPipelineGraphQl will create the pipeline but only set the required fields
-// after creation, UpdatePipeline will be used to set the rest of the fields via
-// the REST API
-func (c *Client) createPipelineGraphQl(pipeline *Pipeline) (*Pipeline, error) {
-	req := graphql.NewRequest(`
-mutation PipelineCreateRequest($pipelineCreateInput: PipelineCreateInput!) {
-  pipelineCreate(input: $pipelineCreateInput) {
-    pipeline {
-      slug
-    }
-  }
-}`)
-
-	orgID, err := c.GetOrganizationId(c.orgSlug)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Var("pipelineCreateInput", map[string]interface{}{
-		"organizationId": orgID,
-		"name":           pipeline.Name,
-		"repository": map[string]string{
-			"url": pipeline.Repository,
-		},
-		"steps": map[string]string{
-			"yaml": pipeline.Configuration,
+// createYAMLPipeline will create the pipeline but only set the required fields
+// filled with stubs. After creation, UpdatePipeline will be used to set the rest
+// of the fields via the REST API
+func (c *Client) createYAMLPipeline(pipeline *Pipeline) (*Pipeline, error) {
+	created, err := c.CreatePipeline(&Pipeline{
+		Name:       pipeline.Name,
+		Repository: pipeline.Repository,
+		TeamUUIDs:  pipeline.TeamUUIDs,
+		Steps: []Step{
+			{
+				Type:    "script",
+				Name:    "Script",
+				Command: "command.sh",
+			},
 		},
 	})
-
-	var createPipelineResponse struct {
-		PipelineCreate struct {
-			Pipeline struct {
-				Slug string `json:"slug"`
-			} `json:"pipeline"`
-		} `json:"pipelineCreate"`
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create an empty pipeline %s", pipeline.Name)
 	}
-
-	if err := c.graphQLRequest(req, &createPipelineResponse); err != nil {
-		return nil, errors.Wrapf(err, "failed to create pipeline %s", pipeline.Slug)
-	}
-
-	pipeline.Slug = createPipelineResponse.PipelineCreate.Pipeline.Slug
-
-	// set all other options with the rest api
+	pipeline.Slug = created.Slug
 	return c.UpdatePipeline(pipeline)
 }
 

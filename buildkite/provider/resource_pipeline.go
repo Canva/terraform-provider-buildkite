@@ -73,6 +73,13 @@ var (
 			Optional:      true,
 			ConflictsWith: []string{"step", "env"},
 		},
+		"team_uuids": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
 		"step": {
 			Type:          schema.TypeList,
 			Optional:      true,
@@ -340,6 +347,7 @@ func updatePipelineFromAPI(d *schema.ResourceData, p *client.Pipeline) error {
 	d.Set("branch_configuration", p.BranchConfiguration)
 	d.Set("default_branch", p.DefaultBranch)
 	d.Set("configuration", p.Configuration)
+	d.Set("team_uuids", p.TeamUUIDs)
 
 	stepMap := make([]interface{}, len(p.Steps))
 	for i, element := range p.Steps {
@@ -444,6 +452,11 @@ func preparePipelineRequestPayload(d *schema.ResourceData) *client.Pipeline {
 	req.Environment = map[string]string{}
 	for k, vI := range d.Get("env").(map[string]interface{}) {
 		req.Environment[k] = vI.(string)
+	}
+	teamUUIDs := d.Get("team_uuids").([]interface{})
+	req.TeamUUIDs = make([]string, len(teamUUIDs))
+	for i, t := range teamUUIDs {
+		req.TeamUUIDs[i] = t.(string)
 	}
 
 	if val, ok := d.GetOk("configuration"); ok {
