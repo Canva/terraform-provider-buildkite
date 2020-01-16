@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/machinebox/graphql"
 	"github.com/pkg/errors"
+	"log"
+	"sort"
 )
 
 type Pipeline struct {
@@ -65,6 +67,12 @@ func (c *Client) GetPipeline(slug string) (*Pipeline, error) {
 	// ignore the value of Steps
 	if len(pipeline.Configuration) > 0 {
 		pipeline.Steps = nil
+		pipeline.Environment = nil
+	}
+
+	pipeline.TeamUUIDs, err = c.getTeamUUIDs(slug)
+	if err != nil {
+		return nil, err
 	}
 
 	return &pipeline, nil
@@ -111,7 +119,7 @@ func (c *Client) createYAMLPipeline(pipeline *Pipeline) (*Pipeline, error) {
 
 func (c *Client) UpdatePipeline(pipeline *Pipeline) (*Pipeline, error) {
 	// Save other parameters via the REST API
-	result := Pipeline{}
+	result := Pipeline{TeamUUIDs: pipeline.TeamUUIDs} // Save TeamUUIDs as long as REST API doesn't provide them in response
 	relativePath := fmt.Sprintf("/v2/organizations/%s/pipelines/%s", c.orgSlug, pipeline.Slug)
 	err := c.patch(relativePath, pipeline, &result)
 	if err != nil {
@@ -159,6 +167,49 @@ mutation PipelineUpdateMutation($pipelineUpdateInput: PipelineUpdateInput!) {
 	}
 
 	return nil
+}
+
+func (c *Client) getTeamUUIDs(slug string) ([]string, error) {
+	req := graphql.NewRequest(`
+query Pipeline($slug: ID!) {
+  pipeline(slug: $slug) {
+    teams(first: 100) {
+      edges {
+        node {
+          team {
+            uuid
+          }
+        }
+      }
+    }
+  }
+}`)
+
+	req.Var("slug", c.createOrgSlug(slug))
+	var resp struct {
+		Pipeline struct {
+			Teams struct {
+				Edges []struct {
+					Node struct {
+						Team struct {
+							UUID string `json:"uuid"`
+						} `json:"team"`
+					} `json:"node"`
+				} `json:"edges"`
+			} `json:"teams"`
+		} `json:"pipeline"`
+	}
+	if err := c.graphQLRequest(req, &resp); err != nil {
+		return nil, err
+	}
+
+	teamUUIDs := make([]string, len(resp.Pipeline.Teams.Edges))
+	for i, UUID := range resp.Pipeline.Teams.Edges {
+		teamUUIDs[i] = UUID.Node.Team.UUID
+	}
+	sort.Strings(teamUUIDs)
+	log.Printf("[TRACE] got team uuids: %v", teamUUIDs)
+	return teamUUIDs, nil
 }
 
 func (c *Client) DeletePipeline(slug string) error {
