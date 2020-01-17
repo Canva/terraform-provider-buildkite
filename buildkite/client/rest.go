@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -49,7 +50,8 @@ func (c *Client) request(method string, relativePath string, requestBody interfa
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return fmt.Errorf("%s", resp.Status)
+		body, _ := ioutil.ReadAll(resp.Body)
+		return fmt.Errorf("%s\nResponse body:\n\n%s\n", resp.Status, body)
 	}
 
 	if responseBody != nil {

@@ -4,10 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hashicorp/terraform/helper/schema"
-	"log"
-	"sort"
-
 	"github.com/saymedia/terraform-buildkite/buildkite/client"
+	"log"
 )
 
 var (
@@ -76,7 +74,7 @@ var (
 			ConflictsWith: []string{"step", "env"},
 		},
 		"team_uuids": {
-			Type:     schema.TypeList,
+			Type:     schema.TypeSet,
 			Optional: true,
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
@@ -353,7 +351,7 @@ func updatePipelineFromAPI(d *schema.ResourceData, p *client.Pipeline) error {
 	d.Set("default_branch", p.DefaultBranch)
 	d.Set("configuration", p.Configuration)
 	d.Set("team_uuids", p.TeamUUIDs)
-	log.Printf("[INFO] buildkite: set pipeline team uuids: %v", p.TeamUUIDs)
+	log.Printf("[TRACE] set pipeline team uuids: %v", p.TeamUUIDs)
 
 	stepMap := make([]interface{}, len(p.Steps))
 	for i, element := range p.Steps {
@@ -459,15 +457,12 @@ func preparePipelineRequestPayload(d *schema.ResourceData) (*client.Pipeline, bo
 	for k, vI := range d.Get("env").(map[string]interface{}) {
 		req.Environment[k] = vI.(string)
 	}
-	teamUUIDs := d.Get("team_uuids").([]interface{})
+	teamUUIDs := d.Get("team_uuids").(*schema.Set).List()
 	req.TeamUUIDs = make([]string, len(teamUUIDs))
 	for i, t := range teamUUIDs {
 		req.TeamUUIDs[i] = t.(string)
 	}
-	// Keep team uuids sorted all the time
-	sort.Strings(req.TeamUUIDs)
-
-	log.Printf("[INFO] pull team uuids from schema: %v", req.TeamUUIDs)
+	log.Printf("[TRACE] pull team uuids from schema: %v", req.TeamUUIDs)
 
 	if val, ok := d.GetOk("configuration"); ok {
 		req.Configuration = val.(string)
