@@ -5,7 +5,6 @@ import (
 	"github.com/machinebox/graphql"
 	"github.com/pkg/errors"
 	"log"
-	"sort"
 )
 
 type Pipeline struct {
@@ -207,7 +206,6 @@ query Pipeline($slug: ID!) {
 	for i, UUID := range resp.Pipeline.Teams.Edges {
 		teamUUIDs[i] = UUID.Node.Team.UUID
 	}
-	sort.Strings(teamUUIDs)
 	log.Printf("[TRACE] got team uuids: %v", teamUUIDs)
 	return teamUUIDs, nil
 }
