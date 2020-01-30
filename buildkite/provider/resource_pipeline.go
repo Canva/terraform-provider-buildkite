@@ -1,16 +1,16 @@
 package provider
 
 import (
-	"fmt"
-	"github.com/hashicorp/terraform/helper/schema"
 	"log"
+
+	"github.com/hashicorp/terraform/helper/schema"
 
 	"github.com/saymedia/terraform-buildkite/buildkite/client"
 )
 
 var (
 	providerSettingsExcluded = []string{"repository", "account"}
-	pipelineSchema = map[string]*schema.Schema{
+	pipelineSchema           = map[string]*schema.Schema{
 		"slug": {
 			Type:     schema.TypeString,
 			Computed: true,
@@ -397,7 +397,7 @@ func filterProviderSettings(
 	resultList := []map[string]interface{}{result}
 
 	providerSchema, ok := pipelineSchema[name]
-	if !ok{
+	if !ok {
 		log.Printf("[ERROR] could not find provider schema for '%s'", name)
 		return resultList
 	}
@@ -485,22 +485,11 @@ func preparePipelineRequestPayload(d *schema.ResourceData) *client.Pipeline {
 		settings := map[string]interface{}{}
 
 		if len(githubSettings) > 0 {
-			s := githubSettings[0].(map[string]interface{})
-
-			for k, vI := range s {
-				if _, ok := d.GetOk(fmt.Sprintf("github_settings.0.%s", k)); ok {
-					settings[k] = vI
-				}
-			}
+			settings = githubSettings[0].(map[string]interface{})
 		} else if len(bitbucketSettings) > 0 {
-			s := bitbucketSettings[0].(map[string]interface{})
-
-			for k, vI := range s {
-				if _, ok := d.GetOk(fmt.Sprintf("bitbucket_settings.0.%s", k)); ok {
-					settings[k] = vI
-				}
-			}
+			settings = bitbucketSettings[0].(map[string]interface{})
 		}
+
 		req.ProviderSettings = settings
 	}
 
