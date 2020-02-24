@@ -3,7 +3,7 @@ package provider
 import (
 	"errors"
 	"fmt"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/saymedia/terraform-buildkite/buildkite/client"
 	"log"
 )
