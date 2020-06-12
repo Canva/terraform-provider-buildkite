@@ -21,7 +21,7 @@ resource "buildkite_pipeline" "build_something" {
   default_branch = "master"
   repository     = "git@github.com:my-org/awesome-repo.git"
   
-  github {
+  github_settings {
     build_pull_request_forks = true
   }
 
