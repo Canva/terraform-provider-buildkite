@@ -1,9 +1,10 @@
 package client
 
 import (
+	"log"
+
 	"github.com/machinebox/graphql"
 	"github.com/pkg/errors"
-	"log"
 )
 
 const (
@@ -69,7 +70,7 @@ query GetTeamPipeline($teamPipelineId: ID!) {
 
 	response := teamPipelineResponse{}
 	if err := c.graphQLRequest(req, &response); err != nil {
-		return nil, errors.Wrapf(err, "failed to get team member %s", teamPipelineId)
+		return nil, errors.Wrapf(err, "failed to get team pipeline %s", teamPipelineId)
 	}
 
 	return &response.TeamPipeline, nil
