@@ -18,15 +18,16 @@ type teamResponse struct {
 }
 
 type Team struct {
-	Id                string `json:"id,omitempty"`
-	UUID              string `json:"uuid,omitempty"`
-	Slug              string `json:"slug,omitempty"`
-	Name              string `json:"name,omitempty"`
-	Description       string `json:"description,omitempty"`
-	Privacy           string `json:"privacy,omitempty"`
-	IsDefaultTeam     bool   `json:"isDefaultTeam,omitempty"`
-	DefaultMemberRole string `json:"defaultMemberRole,omitempty"`
-	CreatedAt         string `json:"createdAt,omitempty"`
+	Id                          string `json:"id,omitempty"`
+	UUID                        string `json:"uuid,omitempty"`
+	Slug                        string `json:"slug,omitempty"`
+	Name                        string `json:"name,omitempty"`
+	Description                 string `json:"description,omitempty"`
+	Privacy                     string `json:"privacy,omitempty"`
+	IsDefaultTeam               bool   `json:"isDefaultTeam,omitempty"`
+	DefaultMemberRole           string `json:"defaultMemberRole,omitempty"`
+	CreatedAt                   string `json:"createdAt,omitempty"`
+	MembersCanCreatePipelines   bool   `json:"membersCanCreatePipelines,omitempty"`
 }
 
 type teamCreateResponse struct {
@@ -60,6 +61,7 @@ query GetTeam($teamSlug: ID!) {
     privacy
     isDefaultTeam
     defaultMemberRole
+    membersCanCreatePipelines
   }
 }`)
 	req.Var("teamSlug", c.createOrgSlug(slug))
@@ -93,19 +95,21 @@ mutation TeamNewMutation($teamCreateInput: TeamCreateInput!) {
         privacy
         isDefaultTeam
         defaultMemberRole
+        membersCanCreatePipelines
       }
     }
   }
 }
 `)
 
-	req.Var("teamCreateInput", map[string]interface{}{
-		"organizationID":    orgId,
-		"name":              team.Name,
-		"description":       team.Description,
-		"isDefaultTeam":     team.IsDefaultTeam,
-		"defaultMemberRole": team.DefaultMemberRole,
-		"privacy":           team.Privacy,
+	req.Var("teamUpdateInput", map[string]interface{}{
+		"id":                           team.Id,
+		"name":                         team.Name,
+		"description":                  team.Description,
+		"isDefaultTeam":                team.IsDefaultTeam,
+		"defaultMemberRole":            team.DefaultMemberRole,
+		"privacy":                      team.Privacy,
+		"membersCanCreatePipelines":    team.MembersCanCreatePipelines,
 	})
 
 	teamCreateResponse := teamCreateResponse{}
@@ -131,18 +135,20 @@ mutation TeamUpdateMutation($teamUpdateInput: TeamUpdateInput!) {
       privacy
       isDefaultTeam
       defaultMemberRole
+      membersCanCreatePipelines
     }
   }
 }
 `)
 
 	req.Var("teamUpdateInput", map[string]interface{}{
-		"id":                team.Id,
-		"name":              team.Name,
-		"description":       team.Description,
-		"isDefaultTeam":     team.IsDefaultTeam,
-		"defaultMemberRole": team.DefaultMemberRole,
-		"privacy":           team.Privacy,
+		"id":                           team.Id,
+		"name":                         team.Name,
+		"description":                  team.Description,
+		"isDefaultTeam":                team.IsDefaultTeam,
+		"defaultMemberRole":            team.DefaultMemberRole,
+		"privacy":                      team.Privacy,
+		"membersCanCreatePipelines":    team.MembersCanCreatePipelines,
 	})
 
 	teamUpdateResponse := teamUpdateResponse{}

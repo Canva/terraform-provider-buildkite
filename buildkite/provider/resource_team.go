@@ -67,6 +67,11 @@ func resourceTeam() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"members_can_create_pipelines": {
+			    Type:     schema.TypeBool,
+			    Optional: true,
+			    Default:  false,
+			},
 		},
 	}
 }
@@ -141,6 +146,7 @@ func updateTeamFromAPI(d *schema.ResourceData, t *client.Team) error {
 	d.Set("privacy", t.Privacy)
 	d.Set("is_default_team", t.IsDefaultTeam)
 	d.Set("default_member_role", t.DefaultMemberRole)
+	d.Set("members_can_create_pipelines", t.MembersCanCreatePipelines)
 
 	return nil
 }
@@ -161,6 +167,7 @@ func prepareTeamRequestPayload(d *schema.ResourceData) *client.Team {
 	req.CreatedAt = d.Get("created_at").(string)
 	req.IsDefaultTeam = d.Get("is_default_team").(bool)
 	req.DefaultMemberRole = d.Get("default_member_role").(string)
+	req.MembersCanCreatePipelines = d.Get("members_can_create_pipelines").(bool)
 
 	return req
 }
