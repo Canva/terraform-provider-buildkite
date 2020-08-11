@@ -68,9 +68,9 @@ func resourceTeam() *schema.Resource {
 				Default:  false,
 			},
 			"members_can_create_pipelines": {
-                Type:     schema.TypeBool,
-                Optional: true,
-                Default:  false,
+			    Type:     schema.TypeBool,
+			    Optional: true,
+			    Default:  false,
             },
 		},
 	}
