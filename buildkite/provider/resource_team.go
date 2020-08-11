@@ -66,12 +66,12 @@ func resourceTeam() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-			},
+		    },
 			"members_can_create_pipelines": {
 			    Type:     schema.TypeBool,
 			    Optional: true,
 			    Default:  false,
-            },
+			},
 		},
 	}
 }
