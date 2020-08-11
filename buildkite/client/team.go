@@ -18,16 +18,16 @@ type teamResponse struct {
 }
 
 type Team struct {
-	Id                          string                    `json:"id,omitempty"`
-	UUID                        string                    `json:"uuid,omitempty"`
-	Slug                        string                    `json:"slug,omitempty"`
-	Name                        string                    `json:"name,omitempty"`
-	Description                 string                    `json:"description,omitempty"`
-	Privacy                     string                    `json:"privacy,omitempty"`
-	IsDefaultTeam               bool                      `json:"isDefaultTeam,omitempty"`
-	DefaultMemberRole           string                    `json:"defaultMemberRole,omitempty"`
-	CreatedAt                   string                    `json:"createdAt,omitempty"`
-	MembersCanCreatePipelines   bool                      `json:"membersCanCreatePipelines,omitempty"`
+	Id                          string  `json:"id,omitempty"`
+	UUID                        string  `json:"uuid,omitempty"`
+	Slug                        string  `json:"slug,omitempty"`
+	Name                        string  `json:"name,omitempty"`
+	Description                 string  `json:"description,omitempty"`
+	Privacy                     string  `json:"privacy,omitempty"`
+	IsDefaultTeam               bool    `json:"isDefaultTeam,omitempty"`
+	DefaultMemberRole           string  `json:"defaultMemberRole,omitempty"`
+	CreatedAt                   string  `json:"createdAt,omitempty"`
+	MembersCanCreatePipelines   bool    `json:"membersCanCreatePipelines,omitempty"`
 }
 
 type teamCreateResponse struct {
