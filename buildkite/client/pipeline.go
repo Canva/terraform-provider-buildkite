@@ -39,8 +39,6 @@ type Pipeline struct {
 	// 3. Update the set of "buildkite_team_pipeline" resources as you need and apply it by targeting
 	//    this resources only, i.e. don't attempt to update the pipeline itself.
 	// 4. Reflect the updated team set in this field in terraform definition.
-	//
-	// TODO(oleg): migrate to use TeamIDs instead of TeamUUIDs.
 	TeamUUIDs []string `json:"team_uuids,omitempty"`
 	Steps     []Step   `json:"steps,omitempty"`
 
@@ -147,10 +145,7 @@ mutation PipelineCreateRequest($pipelineCreateInput: PipelineCreateInput!) {
 		// "buildkite_team_pipeline" terraform resource.
 		for _, t := range pipeline.TeamUUIDs {
 			teamIDs = append(teamIDs, map[string]string{
-				// Warning: undocumented Buildkite feature: they store team ids as base64("Team---" + uuid).
-				// Neither GraphQL not Rest HTTP Buildkite APIs don't allow ro retrieve a team by its UUID so we use
-				// this technique that mimics to Buildkite behavior.
-				"id":          base64.StdEncoding.EncodeToString([]byte("Team---" + t)),
+				"id":          c.getTeamIDFromTeamUUID(t),
 				"accessLevel": TeamPipelineAccessManage,
 			})
 		}
@@ -296,4 +291,16 @@ query GetPipelineId($pipelineSlug: ID!) {
 	}
 
 	return idResponse.Pipeline.Id, nil
+}
+
+// getTeamIDFromTeamUUID returns a team ID associated with the given team's uuid.
+//
+// Warning: undocumented Buildkite feature: they store team ids as base64("Team---" + uuid).
+// Neither GraphQL not Rest HTTP Buildkite APIs don't allow ro retrieve a team by its UUID so we use
+// this technique that mimics to Buildkite behavior.
+//
+// TODO(oleg): migrate to use TeamIDs instead of TeamUUIDs.
+//  Jira ticket: https://canvadev.atlassian.net/browse/FEIN-695
+func (c *Client) getTeamIDFromTeamUUID(UUID string) string {
+	return base64.StdEncoding.EncodeToString([]byte("Team---" + UUID))
 }
