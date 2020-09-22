@@ -27,18 +27,6 @@ type Pipeline struct {
 	// Buildkite doesn't allow you to create a pipeline if you not an admin or if you a member of more that one team or
 	// none of them. So you unable to create a pipeline and attach the "buildkite_team_pipeline" resource to it after it was
 	// created in this case.
-	//
-	// Note that the update of the field in terraform definition is restricted. Use "buildkite_team_pipeline" to update
-	// teams access level Effectively, it's an initial set of teams that own a pipeline. Once pipeline created, it's not
-	// available for editing.
-	//
-	// Example of workflow could be:
-	// 1. Create a pipeline with teams-owners.
-	// 2. Create a set of "buildkite_team_pipeline" resources to reflect exactly this team set, with
-	//    'access_level = "MANAGE_BUILD_AND_READ"' to reflect existing configuration. Apply.
-	// 3. Update the set of "buildkite_team_pipeline" resources as you need and apply it by targeting
-	//    this resources only, i.e. don't attempt to update the pipeline itself.
-	// 4. Reflect the updated team set in this field in terraform definition.
 	TeamUUIDs []string `json:"team_uuids,omitempty"`
 	Steps     []Step   `json:"steps,omitempty"`
 
