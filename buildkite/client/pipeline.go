@@ -1,6 +1,7 @@
 package client
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/machinebox/graphql"
 	"github.com/pkg/errors"
@@ -23,8 +24,11 @@ type Pipeline struct {
 	BranchConfiguration string                 `json:"branch_configuration"`
 	Provider            BuildkiteProvider      `json:"provider,omitempty"`
 	ProviderSettings    map[string]interface{} `json:"provider_settings,omitempty"`
-	TeamUUIDs           []string               `json:"team_uuids,omitempty"`
-	Steps               []Step                 `json:"steps,omitempty"`
+	// Buildkite doesn't allow you to create a pipeline if you not an admin or if you a member of more that one team or
+	// none of them. So you unable to create a pipeline and attach the "buildkite_team_pipeline" resource to it after it was
+	// created in this case.
+	TeamUUIDs []string `json:"team_uuids,omitempty"`
+	Steps     []Step   `json:"steps,omitempty"`
 
 	// Configuration is the "new" YAML based pipeline setup
 	// This value can only be set via the GraphQL API
@@ -78,9 +82,9 @@ func (c *Client) GetPipeline(slug string) (*Pipeline, error) {
 }
 
 func (c *Client) CreatePipeline(pipeline *Pipeline) (*Pipeline, error) {
-	// Create via the REST API if the YAML based configuration is used
+	// Create via the GraphQL API if the YAML based configuration is used
 	if len(pipeline.Configuration) > 0 {
-		return c.createYAMLPipeline(pipeline)
+		return c.createPipelineGraphQl(pipeline)
 	}
 
 	result := Pipeline{}
@@ -93,26 +97,66 @@ func (c *Client) CreatePipeline(pipeline *Pipeline) (*Pipeline, error) {
 	return &result, nil
 }
 
-// createYAMLPipeline will create the pipeline but only set the required fields
-// filled with stubs. After creation, UpdatePipeline will be used to set the rest
-// of the fields via the REST API
-func (c *Client) createYAMLPipeline(pipeline *Pipeline) (*Pipeline, error) {
-	created, err := c.CreatePipeline(&Pipeline{
-		Name:       pipeline.Name,
-		Repository: pipeline.Repository,
-		TeamUUIDs:  pipeline.TeamUUIDs,
-		Steps: []Step{
-			{
-				Type:    "script",
-				Name:    "Script",
-				Command: "command.sh",
-			},
-		},
-	})
+// createPipelineGraphQl will create the pipeline but only set the required fields
+// after creation, UpdatePipeline will be used to set the rest of the fields via
+// the REST API
+func (c *Client) createPipelineGraphQl(pipeline *Pipeline) (*Pipeline, error) {
+	req := graphql.NewRequest(`
+mutation PipelineCreateRequest($pipelineCreateInput: PipelineCreateInput!) {
+  pipelineCreate(input: $pipelineCreateInput) {
+    pipeline {
+      slug
+    }
+  }
+}`)
+
+	orgID, err := c.GetOrganizationId(c.orgSlug)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create an empty pipeline %s", pipeline.Name)
+		return nil, err
 	}
-	pipeline.Slug = created.Slug
+
+	pci := map[string]interface{}{
+		"organizationId": orgID,
+		"name":           pipeline.Name,
+		"repository": map[string]string{
+			"url": pipeline.Repository,
+		},
+		"steps": map[string]string{
+			"yaml": pipeline.Configuration,
+		},
+	}
+
+	if len(pipeline.TeamUUIDs) != 0 {
+		var teamIDs []map[string]string
+		// Converting a slice of team UUIDs into the slice of maps since GraphQL API expects this data in this shape.
+		// We grant "MANAGE_BUILD_AND_READ" access level to _initial_ teams-owners. This can be changed later via
+		// "buildkite_team_pipeline" terraform resource.
+		for _, t := range pipeline.TeamUUIDs {
+			teamIDs = append(teamIDs, map[string]string{
+				"id":          c.getTeamIDFromTeamUUID(t),
+				"accessLevel": TeamPipelineAccessManage,
+			})
+		}
+		pci["teams"] = teamIDs
+	}
+
+	req.Var("pipelineCreateInput", pci)
+
+	var createPipelineResponse struct {
+		PipelineCreate struct {
+			Pipeline struct {
+				Slug string `json:"slug"`
+			} `json:"pipeline"`
+		} `json:"pipelineCreate"`
+	}
+
+	if err := c.graphQLRequest(req, &createPipelineResponse); err != nil {
+		return nil, errors.Wrapf(err, "failed to create pipeline %s", pipeline.Slug)
+	}
+
+	pipeline.Slug = createPipelineResponse.PipelineCreate.Pipeline.Slug
+
+	// set all other options with the rest api
 	return c.UpdatePipeline(pipeline)
 }
 
@@ -235,4 +279,16 @@ query GetPipelineId($pipelineSlug: ID!) {
 	}
 
 	return idResponse.Pipeline.Id, nil
+}
+
+// getTeamIDFromTeamUUID returns a team ID associated with the given team's uuid.
+//
+// Warning: undocumented Buildkite feature: they store team ids as base64("Team---" + uuid).
+// Neither GraphQL not Rest HTTP Buildkite APIs don't allow ro retrieve a team by its UUID so we use
+// this technique that mimics to Buildkite behavior.
+//
+// TODO(oleg): migrate to use TeamIDs instead of TeamUUIDs.
+//  Jira ticket: https://canvadev.atlassian.net/browse/FEIN-695
+func (c *Client) getTeamIDFromTeamUUID(UUID string) string {
+	return base64.StdEncoding.EncodeToString([]byte("Team---" + UUID))
 }
