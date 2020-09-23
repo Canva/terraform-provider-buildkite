@@ -74,7 +74,7 @@ var (
 			Optional:      true,
 			ConflictsWith: []string{"step", "env"},
 		},
-		"team_uuids": {
+		"team_ids": {
 			Type:     schema.TypeSet,
 			Optional: true,
 			Elem: &schema.Schema{
@@ -315,9 +315,9 @@ func UpdatePipeline(d *schema.ResourceData, meta interface{}) error {
 
 	buildkiteClient := meta.(*client.Client)
 
-	pipeline, teamUUIDsHaveChanged := preparePipelineRequestPayload(d)
-	if teamUUIDsHaveChanged {
-		return errors.New("unable to update 'team_uuids', consider to delete the pipeline and create the new one")
+	pipeline, teamIDsHaveChanged := preparePipelineRequestPayload(d)
+	if teamIDsHaveChanged {
+		return errors.New("unable to update 'team_ids', consider to delete the pipeline and create the new one")
 	}
 
 	res, err := buildkiteClient.UpdatePipeline(pipeline)
@@ -351,8 +351,8 @@ func updatePipelineFromAPI(d *schema.ResourceData, p *client.Pipeline) error {
 	d.Set("branch_configuration", p.BranchConfiguration)
 	d.Set("default_branch", p.DefaultBranch)
 	d.Set("configuration", p.Configuration)
-	d.Set("team_uuids", p.TeamUUIDs)
-	log.Printf("[TRACE] set pipeline team uuids: %v", p.TeamUUIDs)
+	d.Set("team_ids", p.TeamIDs)
+	log.Printf("[TRACE] set pipeline team uuids: %v", p.TeamIDs)
 
 	stepMap := make([]interface{}, len(p.Steps))
 	for i, element := range p.Steps {
@@ -458,12 +458,12 @@ func preparePipelineRequestPayload(d *schema.ResourceData) (*client.Pipeline, bo
 	for k, vI := range d.Get("env").(map[string]interface{}) {
 		req.Environment[k] = vI.(string)
 	}
-	teamUUIDs := d.Get("team_uuids").(*schema.Set).List()
-	req.TeamUUIDs = make([]string, len(teamUUIDs))
-	for i, t := range teamUUIDs {
-		req.TeamUUIDs[i] = t.(string)
+	teamIDs := d.Get("team_ids").(*schema.Set).List()
+	req.TeamIDs = make([]string, len(teamIDs))
+	for i, t := range teamIDs {
+		req.TeamIDs[i] = t.(string)
 	}
-	log.Printf("[TRACE] pull team uuids from schema: %v", req.TeamUUIDs)
+	log.Printf("[TRACE] pull team ids from schema: %v", req.TeamIDs)
 
 	if val, ok := d.GetOk("configuration"); ok {
 		req.Configuration = val.(string)
@@ -512,5 +512,5 @@ func preparePipelineRequestPayload(d *schema.ResourceData) (*client.Pipeline, bo
 		req.ProviderSettings = settings
 	}
 
-	return req, d.HasChange("team_uuids")
+	return req, d.HasChange("team_ids")
 }

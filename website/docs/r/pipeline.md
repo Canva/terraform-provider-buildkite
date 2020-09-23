@@ -25,6 +25,8 @@ resource "buildkite_pipeline" "build_something" {
     build_pull_request_forks = true
   }
 
+  team_ids = [var.a_team_id]
+
   step {
     name    = ":pipeline: Fetch pipeline"
     type    = "script"
@@ -51,6 +53,8 @@ The following arguments are supported:
 * `default_branch` - (Optional) the default branch to build. Defaults to `master`
 
 * `env` - (Optional) pipeline environment variables
+
+* `team_ids` - (Optional) an array of team ids to associate given pipeline with. Buildkite doesn't allow you to create a pipeline if you not an admin or if you a member of more that one team or none of them. This argument is needed to address this issue.
 
 * `step` - (Required) nested block list configuring the steps to run. Must provide at least one.
 

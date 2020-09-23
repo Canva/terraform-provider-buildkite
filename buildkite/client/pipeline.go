@@ -1,7 +1,6 @@
 package client
 
 import (
-	"encoding/base64"
 	"fmt"
 	"github.com/machinebox/graphql"
 	"github.com/pkg/errors"
@@ -27,8 +26,8 @@ type Pipeline struct {
 	// Buildkite doesn't allow you to create a pipeline if you not an admin or if you a member of more that one team or
 	// none of them. So you unable to create a pipeline and attach the "buildkite_team_pipeline" resource to it after it was
 	// created in this case.
-	TeamUUIDs []string `json:"team_uuids,omitempty"`
-	Steps     []Step   `json:"steps,omitempty"`
+	TeamIDs []string `json:"team_ids,omitempty"`
+	Steps   []Step   `json:"steps,omitempty"`
 
 	// Configuration is the "new" YAML based pipeline setup
 	// This value can only be set via the GraphQL API
@@ -73,7 +72,7 @@ func (c *Client) GetPipeline(slug string) (*Pipeline, error) {
 		pipeline.Environment = nil
 	}
 
-	pipeline.TeamUUIDs, err = c.getTeamUUIDs(slug)
+	pipeline.TeamIDs, err = c.getTeamIDs(slug)
 	if err != nil {
 		return nil, err
 	}
@@ -126,14 +125,13 @@ mutation PipelineCreateRequest($pipelineCreateInput: PipelineCreateInput!) {
 		},
 	}
 
-	if len(pipeline.TeamUUIDs) != 0 {
+	if len(pipeline.TeamIDs) != 0 {
 		var teamIDs []map[string]string
 		// Converting a slice of team UUIDs into the slice of maps since GraphQL API expects this data in this shape.
-		// We grant "MANAGE_BUILD_AND_READ" access level to _initial_ teams-owners. This can be changed later via
-		// "buildkite_team_pipeline" terraform resource.
-		for _, t := range pipeline.TeamUUIDs {
+		// We grant "MANAGE_BUILD_AND_READ" access level to _initial_ teams-owners.
+		for _, ID := range pipeline.TeamIDs {
 			teamIDs = append(teamIDs, map[string]string{
-				"id":          c.getTeamIDFromTeamUUID(t),
+				"id":          ID,
 				"accessLevel": TeamPipelineAccessManage,
 			})
 		}
@@ -162,7 +160,7 @@ mutation PipelineCreateRequest($pipelineCreateInput: PipelineCreateInput!) {
 
 func (c *Client) UpdatePipeline(pipeline *Pipeline) (*Pipeline, error) {
 	// Save other parameters via the REST API
-	result := Pipeline{TeamUUIDs: pipeline.TeamUUIDs} // Save TeamUUIDs as long as REST API doesn't provide them in response
+	result := Pipeline{TeamIDs: pipeline.TeamIDs} // Save TeamIDs as long as REST API doesn't provide them in response
 	relativePath := fmt.Sprintf("/v2/organizations/%s/pipelines/%s", c.orgSlug, pipeline.Slug)
 	err := c.patch(relativePath, pipeline, &result)
 	if err != nil {
@@ -212,7 +210,7 @@ mutation PipelineUpdateMutation($pipelineUpdateInput: PipelineUpdateInput!) {
 	return nil
 }
 
-func (c *Client) getTeamUUIDs(slug string) ([]string, error) {
+func (c *Client) getTeamIDs(slug string) ([]string, error) {
 	req := graphql.NewRequest(`
 query Pipeline($slug: ID!) {
   pipeline(slug: $slug) {
@@ -220,7 +218,7 @@ query Pipeline($slug: ID!) {
       edges {
         node {
           team {
-            uuid
+            id
           }
         }
       }
@@ -235,7 +233,7 @@ query Pipeline($slug: ID!) {
 				Edges []struct {
 					Node struct {
 						Team struct {
-							UUID string `json:"uuid"`
+							ID string `json:"id"`
 						} `json:"team"`
 					} `json:"node"`
 				} `json:"edges"`
@@ -246,12 +244,12 @@ query Pipeline($slug: ID!) {
 		return nil, err
 	}
 
-	teamUUIDs := make([]string, len(resp.Pipeline.Teams.Edges))
-	for i, UUID := range resp.Pipeline.Teams.Edges {
-		teamUUIDs[i] = UUID.Node.Team.UUID
+	teamIDs := make([]string, len(resp.Pipeline.Teams.Edges))
+	for i, ID := range resp.Pipeline.Teams.Edges {
+		teamIDs[i] = ID.Node.Team.ID
 	}
-	log.Printf("[TRACE] got team uuids: %v", teamUUIDs)
-	return teamUUIDs, nil
+	log.Printf("[TRACE] got team ids: %v", teamIDs)
+	return teamIDs, nil
 }
 
 func (c *Client) DeletePipeline(slug string) error {
@@ -279,16 +277,4 @@ query GetPipelineId($pipelineSlug: ID!) {
 	}
 
 	return idResponse.Pipeline.Id, nil
-}
-
-// getTeamIDFromTeamUUID returns a team ID associated with the given team's uuid.
-//
-// Warning: undocumented Buildkite feature: they store team ids as base64("Team---" + uuid).
-// Neither GraphQL not Rest HTTP Buildkite APIs don't allow ro retrieve a team by its UUID so we use
-// this technique that mimics to Buildkite behavior.
-//
-// TODO(oleg): migrate to use TeamIDs instead of TeamUUIDs.
-//  Jira ticket: https://canvadev.atlassian.net/browse/FEIN-695
-func (c *Client) getTeamIDFromTeamUUID(UUID string) string {
-	return base64.StdEncoding.EncodeToString([]byte("Team---" + UUID))
 }
