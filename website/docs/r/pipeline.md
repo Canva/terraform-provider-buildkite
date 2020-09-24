@@ -54,7 +54,7 @@ The following arguments are supported:
 
 * `env` - (Optional) pipeline environment variables
 
-* `team_ids` - (Optional) an array of team ids to associate given pipeline with. Buildkite doesn't allow you to create a pipeline if you not an admin or if you a member of more that one team or none of them. This argument is needed to address this issue.
+* `team_ids` - (Optional) a list of team ids to associate given pipeline with. Buildkite doesn't allow you to create a pipeline if you not an admin or if you a member of more that one team or none of them. This argument is needed to address this issue.
 
 * `step` - (Required) nested block list configuring the steps to run. Must provide at least one.
 

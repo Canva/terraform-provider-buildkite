@@ -245,8 +245,8 @@ query Pipeline($slug: ID!) {
 	}
 
 	teamIDs := make([]string, len(resp.Pipeline.Teams.Edges))
-	for i, ID := range resp.Pipeline.Teams.Edges {
-		teamIDs[i] = ID.Node.Team.ID
+	for i, edge := range resp.Pipeline.Teams.Edges {
+		teamIDs[i] = edge.Node.Team.ID
 	}
 	log.Printf("[TRACE] got team ids: %v", teamIDs)
 	return teamIDs, nil
