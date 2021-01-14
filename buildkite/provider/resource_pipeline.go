@@ -64,6 +64,9 @@ var (
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
+			Deprecated: "The 'env' attribute is deprecated and it will be removed in future releases. " +
+				"Please, use the 'configuration' attribute to define the pipeline in YAML format. " +
+				"See: https://buildkite.com/docs/tutorials/pipeline-upgrade",
 		},
 		"webhook_url": {
 			Type:     schema.TypeString,
@@ -135,6 +138,9 @@ var (
 					},
 				},
 			},
+			Deprecated: "The 'step' attribute is deprecated and it will be removed in future releases. " +
+				"Please, use the 'configuration' attribute to define the pipeline in YAML format. " +
+				"See: https://buildkite.com/docs/tutorials/pipeline-upgrade",
 		},
 		"bitbucket_settings": {
 			Type:          schema.TypeList,
